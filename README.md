@@ -6,6 +6,7 @@ This project aims to develop a machine learning model that predicts obesity leve
 
 First,Activate the Python virtual runtime environment
 
-<pre>```bash venv\Scripts\activate </pre>
+```bash 
+venv\Scripts\activate
 
 
