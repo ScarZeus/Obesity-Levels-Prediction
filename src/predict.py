@@ -1,17 +1,25 @@
-import pandas as pd
-import joblib
-from src.preprocessing import preprocess_data
+import pickle
+import numpy as np
 
-def predict_obesity(user_input: dict) -> str:
-    model = joblib.load("models/model.pkl")
-    encoders = joblib.load("models/encoders.pkl")
+def load_all_models(model_dir="models"):
+    with open(f"{model_dir}/model.pkl", "rb") as f:
+        model = pickle.load(f)
+    with open(f"{model_dir}/encoder.pkl", "rb") as f:
+        encoders = pickle.load(f)
+    with open(f"{model_dir}/scaler.pkl", "rb") as f:
+        scaler = pickle.load(f)
+    with open(f"{model_dir}/target_encoder.pkl", "rb") as f:
+        target_encoder = pickle.load(f)
+    return model, encoders, scaler, target_encoder
 
-    df = pd.DataFrame([user_input])
+def predict_user_input(user_input_dict):
+    model, encoders, scaler, target_encoder = load_all_models()
 
-    for col in ["Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "FAF", "TUE"]:
-        df[col] = pd.to_numeric(df[col])
+    for key in user_input_dict:
+        if key in encoders:
+            user_input_dict[key] = encoders[key].transform([user_input_dict[key]])[0]
 
-    X, _, _ = preprocess_data(df, is_train=False, encoders=encoders)
-
-    prediction = model.predict(X)
-    return encoders["NObeyesdad"].inverse_transform(prediction)[0]
+    values = np.array([list(user_input_dict.values())]).astype(float)
+    scaled = scaler.transform(values)
+    pred = model.predict(scaled)
+    return target_encoder.inverse_transform(pred)[0]
